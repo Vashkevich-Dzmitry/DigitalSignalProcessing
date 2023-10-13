@@ -54,7 +54,7 @@ namespace DSP.ViewModels
                         k = value;
                         OnPropertyChanged(nameof(K));
 
-                        RestoredY = new(DFT.ExecuteDFT(ComputeResultingSignal(K).y.ToArray(), K, N));
+                        RestoredY = new(DFT.ExecuteDFT(Smoothing.SelectedSmoothingAlgorithm.Execute(ComputeResultingSignal(K).y.ToArray()), K, N));
                     }
                     else
                     {
@@ -127,7 +127,7 @@ namespace DSP.ViewModels
                 resultingY = value;
                 OnPropertyChanged(nameof(ResultingY));
 
-                RestoredY = new(DFT.ExecuteDFT(ComputeResultingSignal(K).y.ToArray(), K, N));
+                SmoothedY = new(Smoothing.SelectedSmoothingAlgorithm.Execute(resultingY.ToArray()));
             }
         }
 
@@ -153,6 +153,19 @@ namespace DSP.ViewModels
                 OnPropertyChanged(nameof(RestoredY));
 
                 DrawCharts();
+            }
+        }
+
+        private ObservableCollection<double> smoothedY;
+        public ObservableCollection<double> SmoothedY
+        {
+            get => smoothedY;
+            set
+            {
+                smoothedY = value;
+                OnPropertyChanged(nameof(SmoothedY));
+
+                RestoredY = new(DFT.ExecuteDFT(Smoothing.SelectedSmoothingAlgorithm.Execute(ComputeResultingSignal(K).y.ToArray()), K, N));
             }
         }
 
@@ -241,6 +254,7 @@ namespace DSP.ViewModels
         public DFTViewModel DFT { get; set; }
         public FiltrationViewModel Filtration { get; set; }
         public NoisesViewModel Noises { get; set; }
+        public SmoothingViewModel Smoothing { get; set; }
 
         public SignalsViewModel(WpfPlot signalsPlot, WpfPlot phasePlot, WpfPlot amplitudePlot)
         {
@@ -253,6 +267,15 @@ namespace DSP.ViewModels
                 if (args.PropertyName == nameof(Noises.P))
                 {
                     (_, ResultingY) = ComputeResultingSignal(N);
+                }
+            };
+
+            Smoothing = new();
+            Smoothing.PropertyChanged += (sender, args) =>
+            {
+                if (args.PropertyName == nameof(Smoothing.SelectedSmoothingAlgorithm))
+                {
+                    SmoothedY = new(Smoothing.SelectedSmoothingAlgorithm.Execute(resultingY.ToArray()));
                 }
             };
 
@@ -270,14 +293,16 @@ namespace DSP.ViewModels
             {
                 if (args.PropertyName == nameof(Filtration.SelectedFiltration))
                 {
-                    RestoredY = new(DFT!.ExecuteDFT(ComputeResultingSignal(K).y.ToArray(), K, N));
+                    RestoredY = new(DFT!.ExecuteDFT(Smoothing.SelectedSmoothingAlgorithm.Execute(ComputeResultingSignal(K).y.ToArray()), K, N));
                 }
             };
 
             (resultingX, resultingY) = ComputeResultingSignal(N);
 
+            smoothedY = new(Smoothing.SelectedSmoothingAlgorithm.Execute(resultingY.ToArray()));
+
             DFT = new DFTViewModel(Filtration, phasePlot, amplitudePlot);
-            restoredY = new(DFT.ExecuteDFT(ComputeResultingSignal(K).y.ToArray(), K, N));
+            restoredY = new(DFT.ExecuteDFT(Smoothing.SelectedSmoothingAlgorithm.Execute(ComputeResultingSignal(K).y.ToArray()), K, N));
 
             DrawCharts();
         }
@@ -287,6 +312,7 @@ namespace DSP.ViewModels
             SignalsPlot.Plot.Clear();
             SignalsPlot.Plot.SetAxisLimits(xMin: 0, xMax: 1);
             SignalsPlot.Plot.AddScatter(ResultingX.ToArray(), ResultingY.ToArray(), System.Drawing.Color.LightGreen, 11);
+            SignalsPlot.Plot.AddScatter(ResultingX.ToArray(), SmoothedY.ToArray(), System.Drawing.Color.Blue, 7);
             SignalsPlot.Plot.AddScatter(ResultingX.ToArray(), RestoredY.ToArray(), System.Drawing.Color.Red, 3);
             SignalsPlot.Refresh();
         }

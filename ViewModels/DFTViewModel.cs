@@ -1,4 +1,5 @@
-﻿using DSP.ViewModels;
+﻿using DSP.Smoothing;
+using DSP.ViewModels;
 using ScottPlot;
 using System;
 using System.Collections.ObjectModel;
@@ -46,6 +47,7 @@ namespace DSP
         {
             double[] sinSpectrum = new double[k], cosSpectrum = new double[k], amplitudeSpectrum = new double[k], phaseSpectrum = new double[k];
             double[] restoredValues = new double[N];
+            double[] positions = new double[k];
             Complex[] complexes = new Complex[k];
 
                 Parallel.For(0, k, (i, state) =>
@@ -53,6 +55,7 @@ namespace DSP
                     sinSpectrum[i] = 2 * values.AsParallel().Select((v, j) => (v, j)).Sum((p) => p.v * Math.Sin(2 * Math.PI * p.j * i / k)) / k;
                     cosSpectrum[i] = 2 * values.AsParallel().Select((v, j) => (v, j)).Sum((p) => p.v * Math.Cos(2 * Math.PI * p.j * i / k)) / k;
 
+                    positions[i] = i;
                     complexes[i] = new(cosSpectrum[i], sinSpectrum[i]);
 
                     amplitudeSpectrum[i] = Filtration.SelectedFiltration.Filter(i, Math.Sqrt(Math.Pow(sinSpectrum[i], 2) + Math.Pow(cosSpectrum[i], 2)));
@@ -64,11 +67,11 @@ namespace DSP
             foreach (Complex complex in complexes) ComplexValues.Add(complex);
 
             PhasePlot.Plot.Clear();
-            PhasePlot.Plot.AddBar(phaseSpectrum, System.Drawing.Color.LightGreen);
+            PhasePlot.Plot.AddBar(phaseSpectrum, positions, System.Drawing.Color.LightGreen);
             PhasePlot.Refresh();
 
             AmplitudePlot.Plot.Clear();
-            AmplitudePlot.Plot.AddBar(amplitudeSpectrum, System.Drawing.Color.LightGreen);
+            AmplitudePlot.Plot.AddBar(amplitudeSpectrum, positions, System.Drawing.Color.LightGreen);
             AmplitudePlot.Refresh();
 
 
