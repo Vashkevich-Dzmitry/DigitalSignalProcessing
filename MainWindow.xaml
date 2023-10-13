@@ -1,0 +1,184 @@
+﻿<Window x:Class="DSP.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:DSP"
+        xmlns:signals="clr-namespace:DSP.Signals"
+        xmlns:filtering="clr-namespace:DSP.Filtering"
+        xmlns:helpers="clr-namespace:DSP.Helpers"
+        mc:Ignorable="d"
+        Title="Digital Signal Processing" Height="1080" Width="1920" WindowState="Maximized" FontSize="20" Icon="/dsp_icon.png">
+    <Window.Resources>
+        <helpers:NullableVisibilityConverter x:Key="NullableVisibilityConverter"/>
+    </Window.Resources>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition  Width="2*"/>
+            <ColumnDefinition Width="5*"/>
+        </Grid.ColumnDefinitions>
+
+
+        <Border BorderBrush="Gray" BorderThickness="0,1,1,0">
+
+            <ScrollViewer Grid.RowSpan="3" VerticalScrollBarVisibility="Visible" FlowDirection="RightToLeft">
+                <StackPanel Margin="15" FlowDirection="LeftToRight">
+                    <DockPanel Name="SignalsListPanel">
+                        <DataGrid HorizontalGridLinesBrush="LightGray" VerticalGridLinesBrush="LightGray" Name="SignalsGrid" TextBlock.TextAlignment="Center" 
+                          BorderBrush="Gray" HeadersVisibility="Column" AutoGenerateColumns="False" VerticalAlignment="Top" 
+                          ScrollViewer.CanContentScroll="True" MaxHeight="240" Margin="5, 5, 5, 0" HorizontalContentAlignment="Center" 
+                          VerticalContentAlignment="Center" DockPanel.Dock="Top" IsReadOnly="True" HorizontalScrollBarVisibility="Disabled" 
+                          BorderThickness="1,1,1,0" Background="#FFF0F0F0" CanUserReorderColumns="False" CanUserResizeColumns="False" 
+                          CanUserSortColumns="False" SelectionMode="Single"
+                          SelectedItem="{Binding SelectedSignal}" ItemsSource="{Binding Signals}" >
+                            <i:Interaction.Triggers>
+                                <i:EventTrigger EventName="MouseRightButtonUp">
+                                    <i:InvokeCommandAction Command="{Binding DeleteCommand}" CommandParameter="{Binding SelectedSignal}"/>
+                                </i:EventTrigger>
+                            </i:Interaction.Triggers>
+
+                            <DataGrid.ColumnHeaderStyle>
+                                <Style TargetType="DataGridColumnHeader">
+                                    <Setter Property="HorizontalContentAlignment" Value="Center"/>
+                                </Style>
+                            </DataGrid.ColumnHeaderStyle>
+
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Type" Binding="{Binding Type}" Width="2*"/>
+                                <DataGridTextColumn Header="f" Binding="{Binding F}" Width="*" />
+                                <DataGridTextColumn Header="A" Binding="{Binding A}" Width="*" />
+                                <DataGridTextColumn Header="φ₀" Binding="{Binding Phi0}" Width="*" />
+                                <DataGridTextColumn Header="d" Binding="{Binding D, TargetNullValue=''}" Width="*"/>
+                            </DataGrid.Columns>
+                        </DataGrid>
+
+                        <Button VerticalContentAlignment="Center" BorderBrush="Gray" Background="WhiteSmoke" Name="AddSignalButton" DockPanel.Dock="Top" Margin="5, 0, 5, 5" 
+                        Command="{Binding AddCommand}">Add signal</Button>
+                    </DockPanel>
+
+
+                    <Expander BorderThickness="1" BorderBrush="Gray" Background="WhiteSmoke" Header="Signal properties" Margin="5" Padding="10,5" IsExpanded="{Binding IsSignalSelected, Mode=OneWay}" IsEnabled="{Binding IsSignalSelected, Mode=OneWay}">
+
+                        <DockPanel>
+                            <ComboBox Name="SignalTypeComboBox" Margin="0, 10, 0, 10" DockPanel.Dock="Top"
+                                      ItemsSource="{helpers:EnumBindingSourceExtension signals:SignalType}" SelectedItem="{Binding SelectedSignal.Type}">
+                                <i:Interaction.Triggers>
+                                    <i:EventTrigger EventName="SelectionChanged">
+                                        <i:InvokeCommandAction Command="{Binding ChangeSignalTypeCommand}" CommandParameter="{Binding ElementName=SignalTypeComboBox, Path=SelectedItem}"/>
+                                    </i:EventTrigger>
+                                </i:Interaction.Triggers>
+                            </ComboBox>
+
+                            <DockPanel VerticalAlignment="Center" Margin="0, 5" DockPanel.Dock="Top">
+                                <Label DockPanel.Dock="Left" Width="40" VerticalAlignment="Center">f:</Label>
+                                <Label Content="{Binding ElementName=FValue, Path=Value, UpdateSourceTrigger=PropertyChanged}"  DockPanel.Dock="Right" Width="80" VerticalAlignment="Center" HorizontalContentAlignment="Right"/>
+                                <Slider Name="FValue" DockPanel.Dock="Right" Maximum="32" Minimum="1" TickPlacement="Both" TickFrequency="1" Value="{Binding SelectedSignal.F}" IsSnapToTickEnabled="True" Margin="10, 0"/>
+                            </DockPanel>
+
+                            <DockPanel VerticalAlignment="Center" Margin="0, 5" DockPanel.Dock="Top">
+                                <Label DockPanel.Dock="Left" Width="40" VerticalAlignment="Center">A:</Label>
+                                <Label Content="{Binding ElementName=AValue, Path=Value, UpdateSourceTrigger=PropertyChanged}"  DockPanel.Dock="Right" Width="80" VerticalAlignment="Center" HorizontalContentAlignment="Right"/>
+                                <Slider Value="{Binding SelectedSignal.A}" Name="AValue" DockPanel.Dock="Right" SmallChange="1" LargeChange="1" Maximum="16" Minimum="1" TickPlacement="Both" TickFrequency="1" IsSnapToTickEnabled="True" Margin="10, 0"/>
+                            </DockPanel>
+
+                            <DockPanel VerticalAlignment="Center" Margin="0, 5" DockPanel.Dock="Top">
+                                <Label DockPanel.Dock="Left" Width="40" VerticalAlignment="Center">φ₀:</Label>
+                                <Label Content="{Binding ElementName=Phi0Value, Path=Value, UpdateSourceTrigger=PropertyChanged}" ContentStringFormat="{}{0:F2}" DockPanel.Dock="Right" Width="80" VerticalAlignment="Center" HorizontalContentAlignment="Right"/>
+                                <Slider Value="{Binding SelectedSignal.Phi0}" Name="Phi0Value" DockPanel.Dock="Right" SmallChange="0.785" LargeChange="1.57" Maximum="6.28" Minimum="-6.28" TickPlacement="Both" TickFrequency="0.785" IsSnapToTickEnabled="True" Margin="10, 0"/>
+                            </DockPanel>
+
+                            <DockPanel Visibility="{Binding SelectedSignal.D, Converter={StaticResource NullableVisibilityConverter}}" VerticalAlignment="Center" Margin="0,5" DockPanel.Dock="Top">
+                                <Label DockPanel.Dock="Left" Width="40" VerticalAlignment="Center">d:</Label>
+                                <Label Content="{Binding ElementName=DValue, Path=Value, UpdateSourceTrigger=PropertyChanged}" ContentStringFormat="{}{0:F2}"  DockPanel.Dock="Right" Width="80" VerticalAlignment="Center" HorizontalContentAlignment="Right"/>
+                                <Slider Value="{Binding SelectedSignal.D, TargetNullValue=0}" Name="DValue" DockPanel.Dock="Right" Maximum="1" Minimum="0" TickPlacement="Both" TickFrequency="0.05" IsSnapToTickEnabled="True" Margin="10, 0"/>
+                            </DockPanel>
+                        </DockPanel>
+                    </Expander>
+
+                    <Expander BorderThickness="1" BorderBrush="Gray" Background="WhiteSmoke" Header="Filtration" Margin="5" Padding="5" IsExpanded="{Binding Filtration.IsFiltrationVisible}">
+
+                        <DockPanel>
+                            <ComboBox Name="FiltrationTypeComboBox" Margin="0, 10, 0, 10" DockPanel.Dock="Top"
+                                  ItemsSource="{helpers:EnumBindingSourceExtension filtering:FiltrationType}" SelectedItem="{Binding Filtration.SelectedFiltration.Type}">
+                                <i:Interaction.Triggers>
+                                    <i:EventTrigger EventName="SelectionChanged">
+                                        <i:InvokeCommandAction Command="{Binding Filtration.ChangeFiltrationTypeCommand}" CommandParameter="{Binding ElementName=FiltrationTypeComboBox, Path=SelectedItem}"/>
+                                    </i:EventTrigger>
+                                </i:Interaction.Triggers>
+                            </ComboBox>
+
+                            <DockPanel Visibility="{Binding Filtration.SelectedFiltration.MinHarmonic, Converter={StaticResource NullableVisibilityConverter}}" VerticalAlignment="Center" Margin="0,5" DockPanel.Dock="Top">
+                                <Label DockPanel.Dock="Top" VerticalAlignment="Center" HorizontalAlignment="Left">Min harmonic:</Label>
+                                <Label Content="{Binding ElementName=MinHarmonic, Path=Value, UpdateSourceTrigger=PropertyChanged}" DockPanel.Dock="Right" Width="80" VerticalAlignment="Center" HorizontalContentAlignment="Right"/>
+                                <Slider Value="{Binding Filtration.SelectedFiltration.MinHarmonic, TargetNullValue=0}" Name="MinHarmonic" DockPanel.Dock="Right" Maximum="{Binding ElementName=KValue, Path=Value, UpdateSourceTrigger=PropertyChanged}" Minimum="0" TickPlacement="Both" TickFrequency="1" IsSnapToTickEnabled="True" Margin="10, 0"/>
+                            </DockPanel>
+                            <DockPanel Visibility="{Binding Filtration.SelectedFiltration.MaxHarmonic, Converter={StaticResource NullableVisibilityConverter}}" VerticalAlignment="Center" Margin="0,5" DockPanel.Dock="Top">
+                                <Label DockPanel.Dock="Top" VerticalAlignment="Center" HorizontalAlignment="Left">Max harmonic:</Label>
+                                <Label Content="{Binding ElementName=MaxHarmonic, Path=Value, UpdateSourceTrigger=PropertyChanged}" DockPanel.Dock="Right" Width="80" VerticalAlignment="Center" HorizontalContentAlignment="Right"/>
+                                <Slider Value="{Binding Filtration.SelectedFiltration.MaxHarmonic, TargetNullValue=0}" Name="MaxHarmonic" DockPanel.Dock="Right" Maximum="{Binding ElementName=KValue, Path=Value, UpdateSourceTrigger=PropertyChanged}" Minimum="0" TickPlacement="Both" TickFrequency="1" IsSnapToTickEnabled="True" Margin="10, 0"/>
+                            </DockPanel>
+                        </DockPanel>
+                    </Expander>
+                    <Expander BorderThickness="1" BorderBrush="Gray" Background="WhiteSmoke" Header="Complex numbers" Margin="5" Padding="5" IsExpanded="{Binding DFT.IsComplexesVisible}">
+
+                        <DockPanel>
+                            <DataGrid x:Name="ComplexValuesGrid" ItemsSource="{Binding DFT.ComplexValues}"
+                              HorizontalGridLinesBrush="LightGray" VerticalGridLinesBrush="LightGray" TextBlock.TextAlignment="Center" 
+                              BorderBrush="Gray" HeadersVisibility="Column" AutoGenerateColumns="False" VerticalAlignment="Top" 
+                              ScrollViewer.CanContentScroll="True" HorizontalContentAlignment="Center" 
+                              VerticalContentAlignment="Center" DockPanel.Dock="Top" IsReadOnly="True" HorizontalScrollBarVisibility="Disabled" 
+                              BorderThickness="1,1,1,0" Background="#FFF0F0F0" CanUserReorderColumns="False" CanUserResizeColumns="False" 
+                              CanUserSortColumns="False" SelectionMode="Single"
+                              MaxHeight="480" Margin="5">
+                                <DataGrid.ColumnHeaderStyle>
+                                    <Style TargetType="DataGridColumnHeader">
+                                        <Setter Property="HorizontalContentAlignment" Value="Center"/>
+                                    </Style>
+                                </DataGrid.ColumnHeaderStyle>
+
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="Re" Binding="{Binding Real, StringFormat='F5'}" Width="*" />
+                                    <DataGridTextColumn Header="Im" Binding="{Binding Imaginary, StringFormat='F5'}" Width="*" />
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </DockPanel>
+                    </Expander>
+                </StackPanel>
+            </ScrollViewer>
+        </Border>
+
+        <Border Grid.Column="1" BorderBrush="Gray" BorderThickness="0,1,0,0">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                    <RowDefinition Height="0.2*"/>
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition  Width="2*"/>
+                    <ColumnDefinition Width="2*"/>
+                </Grid.ColumnDefinitions>
+
+                <WpfPlot Name="SignalsPlot" Grid.ColumnSpan="2" Margin="15"/>
+                <WpfPlot Name="AmplitudePlot" Grid.Row="1" Margin="15"/>
+                <WpfPlot Name="PhasePlot" Grid.Column="1" Grid.Row="1" Margin="15"/>
+
+                <DockPanel Grid.Row="2" VerticalAlignment="Top" Margin="50, 10">
+                    <Label DockPanel.Dock="Left"  VerticalAlignment="Center">N:</Label>
+                    <Label Content="{Binding ElementName=NValue, Path=Value, UpdateSourceTrigger=PropertyChanged}"  DockPanel.Dock="Right" Width="80" VerticalAlignment="Center" HorizontalContentAlignment="Right"/>
+                    <Slider Name="NValue" DockPanel.Dock="Right" SmallChange="4" LargeChange="512" Maximum="1024" Minimum="4" TickPlacement="Both" Ticks="4, 8, 16, 32, 64, 128, 256, 512, 1024" Value="{Binding N}" IsSnapToTickEnabled="True" Margin="10, 0"/>
+                </DockPanel>
+
+                <DockPanel Grid.Column="1" Grid.Row="2" VerticalAlignment="Top" Margin="50, 10">
+                    <Label DockPanel.Dock="Left"  VerticalAlignment="Center">k:</Label>
+                    <Label Content="{Binding ElementName=KValue, Path=Value, UpdateSourceTrigger=PropertyChanged}"  DockPanel.Dock="Right" Width="80" VerticalAlignment="Center" HorizontalContentAlignment="Right"/>
+                    <Slider Name="KValue" DockPanel.Dock="Right" SmallChange="4" LargeChange="512" Maximum="1024" Minimum="4" TickPlacement="Both" Ticks="2, 4, 8, 16, 32, 64, 128, 256, 512, 1024" Value="{Binding K}" IsSnapToTickEnabled="True" Margin="10, 0"/>
+                </DockPanel>
+            </Grid>
+        </Border>
+    </Grid>
+</Window>
