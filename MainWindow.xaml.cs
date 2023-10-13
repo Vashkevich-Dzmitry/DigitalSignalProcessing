@@ -12,8 +12,8 @@ namespace DSP
         {
             InitializeComponent();
 
-            SignalViewModel signalViewModel = new(SignalsPlot, PhasePlot, AmplitudePlot);
-            DataContext = signalViewModel;
+            SignalsViewModel signalsViewModel = new(SignalsPlot, PhasePlot, AmplitudePlot);
+            DataContext = signalsViewModel;
         }
     }
 }

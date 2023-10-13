@@ -94,7 +94,7 @@
                             <DockPanel Visibility="{Binding SelectedSignal.D, Converter={StaticResource NullableVisibilityConverter}}" VerticalAlignment="Center" Margin="0,5" DockPanel.Dock="Top">
                                 <Label DockPanel.Dock="Left" Width="40" VerticalAlignment="Center">d:</Label>
                                 <Label Content="{Binding ElementName=DValue, Path=Value, UpdateSourceTrigger=PropertyChanged}" ContentStringFormat="{}{0:F2}"  DockPanel.Dock="Right" Width="80" VerticalAlignment="Center" HorizontalContentAlignment="Right"/>
-                                <Slider Value="{Binding SelectedSignal.D, TargetNullValue=0}" Name="DValue" DockPanel.Dock="Right" Maximum="1" Minimum="0" TickPlacement="Both" TickFrequency="0.05" IsSnapToTickEnabled="True" Margin="10, 0"/>
+                                <Slider Value="{Binding SelectedSignal.D}" Name="DValue" DockPanel.Dock="Right" Maximum="1" Minimum="0.0" TickPlacement="Both" TickFrequency="0.05" IsSnapToTickEnabled="True" Margin="10, 0" SmallChange="0.05"/>
                             </DockPanel>
                         </DockPanel>
                     </Expander>
@@ -145,6 +145,15 @@
                                     <DataGridTextColumn Header="Im" Binding="{Binding Imaginary, StringFormat='F5'}" Width="*" />
                                 </DataGrid.Columns>
                             </DataGrid>
+                        </DockPanel>
+                    </Expander>
+
+                    <Expander BorderThickness="1" BorderBrush="Gray" Background="WhiteSmoke" Header="Noise" Margin="5" Padding="5" IsExpanded="{Binding Noises.IsNoisesVisible}">
+
+                        <DockPanel VerticalAlignment="Center" Margin="0,5" DockPanel.Dock="Top">
+                            <Label DockPanel.Dock="Left" Width="40" VerticalAlignment="Center">p:</Label>
+                            <Label Content="{Binding ElementName=PValue, Path=Value, UpdateSourceTrigger=PropertyChanged}" ContentStringFormat="{}{0:F2}"  DockPanel.Dock="Right" Width="80" VerticalAlignment="Center" HorizontalContentAlignment="Right"/>
+                            <Slider Value="{Binding Noises.P}" Name="PValue" DockPanel.Dock="Right" Maximum="1" Minimum="0" TickPlacement="Both" TickFrequency="0.05" IsSnapToTickEnabled="True" Margin="10, 0" SmallChange="0.05"/>
                         </DockPanel>
                     </Expander>
                 </StackPanel>

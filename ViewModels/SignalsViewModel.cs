@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace DSP.ViewModels
 {
-    class SignalViewModel : INotifyPropertyChanged
+    class SignalsViewModel : INotifyPropertyChanged
     {
         private int n;
         public int N
@@ -18,22 +18,25 @@ namespace DSP.ViewModels
             get => n;
             set
             {
-                if (value >= k)
+                if (n != value)
                 {
-                    n = value;
-                    OnPropertyChanged(nameof(N));
+                    if (value >= k)
+                    {
+                        n = value;
+                        OnPropertyChanged(nameof(N));
 
-                    (ResultingX, ResultingY) = ComputeResultingSignal(N);
-                }
-                else
-                {
-                    k = value;
-                    n = value;
+                        (ResultingX, ResultingY) = ComputeResultingSignal(N);
+                    }
+                    else
+                    {
+                        k = value;
+                        n = value;
 
-                    OnPropertyChanged(nameof(K));
-                    OnPropertyChanged(nameof(N));
+                        OnPropertyChanged(nameof(K));
+                        OnPropertyChanged(nameof(N));
 
-                    (ResultingX, ResultingY) = ComputeResultingSignal(N);
+                        (ResultingX, ResultingY) = ComputeResultingSignal(N);
+                    }
                 }
             }
         }
@@ -44,22 +47,25 @@ namespace DSP.ViewModels
             get => k;
             set
             {
-                if (value <= N)
+                if (k != value)
                 {
-                    k = value;
-                    OnPropertyChanged(nameof(K));
+                    if (value <= N)
+                    {
+                        k = value;
+                        OnPropertyChanged(nameof(K));
 
-                    RestoredY = new(DFT.ExecuteDFT(ComputeResultingSignal(K).y.ToArray(), K, N));
-                }
-                else
-                {
-                    n = value;
-                    k = value;
+                        RestoredY = new(DFT.ExecuteDFT(ComputeResultingSignal(K).y.ToArray(), K, N));
+                    }
+                    else
+                    {
+                        n = value;
+                        k = value;
 
-                    OnPropertyChanged(nameof(N));
-                    OnPropertyChanged(nameof(K));
+                        OnPropertyChanged(nameof(N));
+                        OnPropertyChanged(nameof(K));
 
-                    (ResultingX, ResultingY) = ComputeResultingSignal(N);
+                        (ResultingX, ResultingY) = ComputeResultingSignal(N);
+                    }
                 }
             }
         }
@@ -154,7 +160,7 @@ namespace DSP.ViewModels
         {
             ConcurrentBag<(double x, double y)> concurrentResult = new();
 
-            Parallel.ForEach(Signals.SelectMany(signal => signal.Generate(signal.Phi0, signal.A, signal.F, pointsAmount, signal.D)).GroupBy(point => point.X),
+            Parallel.ForEach(Signals.SelectMany(signal => Noises.MakeNoise(signal.Generate(signal.Phi0, signal.A, signal.F, pointsAmount, signal.D), signal.A)).GroupBy(point => point.X),
                 group =>
                 {
                     concurrentResult.Add(((double)group.Key, (double)group.Sum(point => point.Y)));
@@ -234,11 +240,21 @@ namespace DSP.ViewModels
 
         public DFTViewModel DFT { get; set; }
         public FiltrationViewModel Filtration { get; set; }
+        public NoisesViewModel Noises { get; set; }
 
-        public SignalViewModel(WpfPlot signalsPlot, WpfPlot phasePlot, WpfPlot amplitudePlot)
+        public SignalsViewModel(WpfPlot signalsPlot, WpfPlot phasePlot, WpfPlot amplitudePlot)
         {
             n = 128;
             k = 64;
+
+            Noises = new();
+            Noises.PropertyChanged += (sender, args) =>
+            {
+                if (args.PropertyName == nameof(Noises.P))
+                {
+                    (_, ResultingY) = ComputeResultingSignal(N);
+                }
+            };
 
             Signals = new ObservableCollection<GeneratedSignal>
             {
@@ -249,11 +265,11 @@ namespace DSP.ViewModels
             PhasePlot = phasePlot;
             AmplitudePlot = amplitudePlot;
 
-            Filtration = new FiltrationViewModel();
+            Filtration = new();
             Filtration.PropertyChanged += (sender, args) =>
             {
-                if (args.PropertyName == nameof(Filtration.SelectedFiltration)) 
-                { 
+                if (args.PropertyName == nameof(Filtration.SelectedFiltration))
+                {
                     RestoredY = new(DFT!.ExecuteDFT(ComputeResultingSignal(K).y.ToArray(), K, N));
                 }
             };

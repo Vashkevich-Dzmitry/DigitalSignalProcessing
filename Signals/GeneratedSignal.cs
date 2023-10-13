@@ -1,4 +1,5 @@
-﻿using System.ComponentModel;
+﻿using System;
+using System.ComponentModel;
 using System.Drawing;
 
 namespace DSP.Signals
@@ -15,8 +16,11 @@ namespace DSP.Signals
             get => phi0;
             set
             {
-                phi0 = value;
-                OnPropertyChanged(nameof(Phi0));
+                if (phi0 != value)
+                {
+                    phi0 = value;
+                    OnPropertyChanged(nameof(Phi0));
+                }
             }
         }
         public float F
@@ -24,8 +28,11 @@ namespace DSP.Signals
             get => f;
             set
             {
-                f = value;
-                OnPropertyChanged(nameof(F));
+                if (f != value)
+                {
+                    f = value;
+                    OnPropertyChanged(nameof(F));
+                }
             }
         }
         public float A
@@ -33,8 +40,11 @@ namespace DSP.Signals
             get => a;
             set
             {
-                a = value;
-                OnPropertyChanged(nameof(A));
+                if (a != value)
+                {
+                    a = value;
+                    OnPropertyChanged(nameof(A));
+                }
             }
         }
 
@@ -43,8 +53,11 @@ namespace DSP.Signals
             get => d;
             set
             {
-                d = value;
-                OnPropertyChanged(nameof(D));
+                if (d != value)
+                {
+                    d = value;
+                    OnPropertyChanged(nameof(D));
+                }
             }
         }
 
