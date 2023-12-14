@@ -173,7 +173,7 @@ namespace DSP.ViewModels
                 resultingY1 = value;
                 OnPropertyChanged(nameof(ResultingY1));
 
-                DrawCharts();
+                (CorrelatedX, CorrelatedY) = Correlation.Find(ResultingY1, ResultingY2);
             }
         }
 
@@ -202,7 +202,7 @@ namespace DSP.ViewModels
                 resultingY2 = value;
                 OnPropertyChanged(nameof(ResultingY2));
 
-                DrawCharts();
+                (CorrelatedX, CorrelatedY) = Correlation.Find(ResultingY1, ResultingY2);DrawCharts();
             }
         }
 
@@ -215,6 +215,31 @@ namespace DSP.ViewModels
             {
                 resultingX2 = value;
                 OnPropertyChanged(nameof(ResultingX2));
+            }
+        }
+
+        private ObservableCollection<double> correlatedY;
+        public ObservableCollection<double> CorrelatedY
+        {
+            get => correlatedY;
+            set
+            {
+                correlatedY = value;
+                OnPropertyChanged(nameof(CorrelatedY));
+
+                DrawCharts();
+            }
+        }
+
+
+        private ObservableCollection<double> correlatedX;
+        public ObservableCollection<double> CorrelatedX
+        {
+            get => correlatedX;
+            set
+            {
+                correlatedX = value;
+                OnPropertyChanged(nameof(CorrelatedX));
             }
         }
 
@@ -370,14 +395,22 @@ namespace DSP.ViewModels
         public ObservableCollection<GeneratedSignal> Signals2 { get; set; }
 
         public WpfPlot SignalsPlot { get; set; }
+        public WpfPlot CorrelationPlot { get; set; }
 
-        public SignalsViewModel(WpfPlot signalsPlot, WpfPlot phasePlot, WpfPlot amplitudePlot)
+        public SignalsViewModel(WpfPlot signalsPlot, WpfPlot correlationPlot)
         {
             n = 256;
             minX = 0;
             maxX = 256;
 
             Correlation = new();
+            Correlation.PropertyChanged += (sender, args) =>
+            {
+                if (args.PropertyName == nameof(Correlation.SelectedAlgorithm))
+                {
+                    (CorrelatedX, CorrelatedY) = Correlation.Find(ResultingY1, ResultingY2);
+                }
+            };
 
             Noises1 = new();
             Noises1.PropertyChanged += (sender, args) =>
@@ -408,9 +441,12 @@ namespace DSP.ViewModels
             };
 
             SignalsPlot = signalsPlot;
+            CorrelationPlot = correlationPlot;
 
             (resultingX1, resultingY1) = ComputeResultingSignal(Signals1, Noises1, N);
             (resultingX2, resultingY2) = ComputeResultingSignal(Signals2, Noises2, N, MinX, MaxX);
+
+            (correlatedX, correlatedY) = Correlation.Find(ResultingY1, ResultingY2);
 
             DrawCharts();
         }
@@ -422,6 +458,10 @@ namespace DSP.ViewModels
             SignalsPlot.Plot.AddScatter(ResultingX1.ToArray(), ResultingY1.ToArray(), System.Drawing.Color.LightGreen, 3);
             SignalsPlot.Plot.AddScatter(ResultingX2.ToArray(), ResultingY2.ToArray(), System.Drawing.Color.Blue, 3);
             SignalsPlot.Refresh();
+
+            CorrelationPlot.Plot.Clear();
+            CorrelationPlot.Plot.AddScatter(CorrelatedX.ToArray(), CorrelatedY.ToArray(), System.Drawing.Color.IndianRed, 3);
+            CorrelationPlot.Refresh();
         }
 
         public event PropertyChangedEventHandler? PropertyChanged;

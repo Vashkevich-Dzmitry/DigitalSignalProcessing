@@ -53,17 +53,7 @@ namespace DSP.ViewModels
             {
                 if (selectedAlgorithm != value)
                 {
-                    //selectedCorrelationAlgorithm.PropertyChanged -= (sender, args) =>
-                    //{
-                    //    OnPropertyChanged(nameof(SelectedCorrelationAlgorithm));
-                    //};
-
                     selectedAlgorithm = value;
-
-                    //selectedCorrelationAlgorithm.PropertyChanged += (sender, args) =>
-                    //{
-                    //    OnPropertyChanged(nameof(SelectedCorrelationAlgorithm));
-                    //};
 
                     OnPropertyChanged(nameof(SelectedAlgorithm));
                 }
