@@ -27,7 +27,7 @@
 
             <ScrollViewer Grid.RowSpan="3" VerticalScrollBarVisibility="Visible" FlowDirection="RightToLeft">
 
-                <StackPanel Margin="15" FlowDirection="LeftToRight">
+                <StackPanel Name="MenuPanel" Margin="15" FlowDirection="LeftToRight" IsEnabled="{Binding IsMenuEnabled}">
 
                     <!-- Signal 1 -->
                     <Expander BorderThickness="1" BorderBrush="Gray" Background="WhiteSmoke" Header="First signal" Margin="5" Padding="10,5">
@@ -234,17 +234,27 @@
                     <!-- Correlation -->
 
                     <Expander BorderThickness="1" BorderBrush="Gray" Background="WhiteSmoke" Header="Correlation" Margin="5" Padding="10,5" IsExpanded="{Binding Correlation.IsCorrelationPanelVisible}">
+                        <DockPanel>
 
-                        <ComboBox Name="CorrelationTypeComboBox" Margin="0, 10, 0, 10" DockPanel.Dock="Top"
+                            <ComboBox Name="CorrelationTypeComboBox" Margin="0, 10, 0, 10" DockPanel.Dock="Top"
                                   ItemsSource="{helpers:EnumBindingSourceExtension correlation:CorrelationType}" SelectedItem="{Binding Correlation.SelectedAlgorithm.Type}">
-                            <i:Interaction.Triggers>
-                                <i:EventTrigger EventName="SelectionChanged">
-                                    <i:InvokeCommandAction Command="{Binding Correlation.ChangeCorrelationTypeCommand}" CommandParameter="{Binding ElementName=CorrelationTypeComboBox, Path=SelectedItem}"/>
-                                </i:EventTrigger>
-                            </i:Interaction.Triggers>
-                        </ComboBox>
+                                <i:Interaction.Triggers>
+                                    <i:EventTrigger EventName="SelectionChanged">
+                                        <i:InvokeCommandAction Command="{Binding Correlation.ChangeCorrelationTypeCommand}" CommandParameter="{Binding ElementName=CorrelationTypeComboBox, Path=SelectedItem}"/>
+                                    </i:EventTrigger>
+                                </i:Interaction.Triggers>
+                            </ComboBox>
+
+                            <!-- Magic button -->
+                            <Button VerticalContentAlignment="Center" BorderBrush="Gray" Background="WhiteSmoke" 
+                                Name="VisualizationButton" DockPanel.Dock="Top" Margin="5, 0, 5, 5" 
+                                Command="{Binding StartVisualization}" IsEnabled="{Binding Correlation.IsVisualizationButtonVisible}">Visualization</Button>
+
+                        </DockPanel>
 
                     </Expander>
+
+
 
                 </StackPanel>
             </ScrollViewer>

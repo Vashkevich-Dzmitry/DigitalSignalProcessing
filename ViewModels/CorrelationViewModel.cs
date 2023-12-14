@@ -1,5 +1,6 @@
 ﻿using DSP.Correlations;
 using DSP.Helpers;
+using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
@@ -23,6 +24,20 @@ namespace DSP.ViewModels
             }
         }
 
+        private bool isVisualizationButtonVisible;
+        public bool IsVisualizationButtonVisible
+        {
+            get => isVisualizationButtonVisible;
+            set
+            {
+                if (isVisualizationButtonVisible != value)
+                {
+                    isVisualizationButtonVisible = value;
+                    OnPropertyChanged(nameof(IsVisualizationButtonVisible));
+                }
+            }
+        }
+
         private RelayCommand? changeCorrelationTypeCommand;
         public RelayCommand ChangeCorrelationTypeCommand
         {
@@ -33,11 +48,19 @@ namespace DSP.ViewModels
                     CorrelationType? correlationType = obj as CorrelationType?;
                     if (correlationType != null)
                     {
-                        ICorrelation newCorrelation = correlationType switch
+                        ICorrelation newCorrelation;
+                        switch (correlationType)
                         {
-                            CorrelationType.Linear => new LinearCorrelation(),
-                            _ => new FastCorrelation()
-                        };
+                            case CorrelationType.Linear:
+                                IsVisualizationButtonVisible = true;
+                                newCorrelation = new LinearCorrelation();
+                                break;
+
+                            default:
+                                IsVisualizationButtonVisible = false;
+                                newCorrelation = new FastCorrelation();
+                                break;
+                        }
 
                         SelectedAlgorithm = newCorrelation;
                     }
@@ -64,12 +87,13 @@ namespace DSP.ViewModels
         {
             selectedAlgorithm = new LinearCorrelation();
             isCorrelationPanelVisible = false;
+            isVisualizationButtonVisible = true;
         }
 
         public (ObservableCollection<double> x, ObservableCollection<double> y) Find(ObservableCollection<double> firstSignal, ObservableCollection<double> secondSignal)
         {
-            ObservableCollection<double> x = new ();
-            ObservableCollection<double> y = new ();
+            ObservableCollection<double> x = new();
+            ObservableCollection<double> y = new();
 
             double[] correlationResult = SelectedAlgorithm.FindCorrelation(firstSignal.ToArray(), secondSignal.ToArray());
 

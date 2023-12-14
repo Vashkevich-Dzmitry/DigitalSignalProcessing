@@ -4,10 +4,14 @@ using DSP.Signals;
 using ScottPlot;
 using ScottPlot.Renderable;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Threading;
 
 namespace DSP.ViewModels
 {
@@ -26,10 +30,10 @@ namespace DSP.ViewModels
                     (ResultingX1, ResultingY1) = ComputeResultingSignal(Signals1, Noises1, N);
 
                     OnPropertyChanged(nameof(N));
-                    
+
                     MinX = 0;
                     MaxX = value;
-                    
+
                 }
             }
         }
@@ -202,7 +206,7 @@ namespace DSP.ViewModels
                 resultingY2 = value;
                 OnPropertyChanged(nameof(ResultingY2));
 
-                (CorrelatedX, CorrelatedY) = Correlation.Find(ResultingY1, ResultingY2);DrawCharts();
+                (CorrelatedX, CorrelatedY) = Correlation.Find(ResultingY1, ResultingY2); DrawCharts();
             }
         }
 
@@ -399,6 +403,7 @@ namespace DSP.ViewModels
 
         public SignalsViewModel(WpfPlot signalsPlot, WpfPlot correlationPlot)
         {
+            isMenuEnabled = true;
             n = 256;
             minX = 0;
             maxX = 256;
@@ -417,7 +422,7 @@ namespace DSP.ViewModels
             {
                 if (args.PropertyName == nameof(Noises1.P))
                 {
-                    (_, ResultingY1) = ComputeResultingSignal(Signals1, Noises1, N);
+                    (_, ResultingY1) = ComputeResultingSignal(Signals1!, Noises1, N);
                 }
             };
 
@@ -431,7 +436,7 @@ namespace DSP.ViewModels
             {
                 if (args.PropertyName == nameof(Noises2.P))
                 {
-                    (_, ResultingY2) = ComputeResultingSignal(Signals2, Noises2, N, MinX, MaxX);
+                    (_, ResultingY2) = ComputeResultingSignal(Signals2!, Noises2, N, MinX, MaxX);
                 }
             };
 
@@ -460,10 +465,85 @@ namespace DSP.ViewModels
             SignalsPlot.Refresh();
 
             CorrelationPlot.Plot.Clear();
+            CorrelationPlot.Plot.SetAxisLimits(xMin: 0, xMax: CorrelatedX.Count, yMin: -1, yMax: 1);
             CorrelationPlot.Plot.AddScatter(CorrelatedX.ToArray(), CorrelatedY.ToArray(), System.Drawing.Color.IndianRed, 3);
             CorrelationPlot.Refresh();
         }
 
+        private bool isMenuEnabled;
+        public bool IsMenuEnabled
+        {
+            get => isMenuEnabled;
+            set
+            {
+                if (isMenuEnabled != value)
+                {
+                    isMenuEnabled = value;
+                    OnPropertyChanged(nameof(IsMenuEnabled));
+                }
+            }
+        }
+
+        private RelayCommand? startVisualization;
+        public RelayCommand StartVisualization
+        {
+            get
+            {
+                return startVisualization ??= new RelayCommand(obj =>
+                {
+                    IsMenuEnabled = false;
+                    Task.Run(() => Visualization());
+                });
+            }
+        }
+
+        private async void Visualization()
+        {
+            double[] y1 = ResultingY1.ToArray();
+            double[] y2 = ResultingY2.ToArray();
+            double[] yc = CorrelatedY.ToArray();
+
+            int n1 = y1.Length;
+            int n2 = y2.Length;
+            int nc = yc.Length;
+
+            List<double> computedCorrelationY = new();
+            List<double> computedCorrelationX = new();
+            List<double> signal2X = ResultingX2.Select(x => x - n2).ToList();
+
+            double[] x1 = ResultingX1.ToArray();
+            double[] xc = CorrelatedX.ToArray();
+
+
+            for (int i = 0; i < nc; i++)
+            {
+                computedCorrelationY.Add(yc[i]);
+                computedCorrelationX.Add(i);
+                signal2X = signal2X.Select(x => x + 1).ToList();
+
+                Application.Current.Dispatcher.Invoke(() =>
+                {
+                    SignalsPlot.Plot.Clear();
+                    SignalsPlot.Plot.AddBar(y1, x1, System.Drawing.Color.LightGreen);
+                    SignalsPlot.Plot.AddBar(y2, signal2X.ToArray(), System.Drawing.Color.Blue);
+                    SignalsPlot.Plot.SetAxisLimits(xMin: 1 - n2, xMax: nc);
+                    SignalsPlot.Refresh();
+
+                    CorrelationPlot.Plot.Clear();
+                    CorrelationPlot.Plot.AddScatter(computedCorrelationX.ToArray(), computedCorrelationY.ToArray(), System.Drawing.Color.IndianRed, 3);
+                    CorrelationPlot.Plot.SetAxisLimits(xMin: 0, xMax: nc, yMin: -1, yMax: 1);
+                    CorrelationPlot.Refresh();
+                });
+
+                await Task.Delay(100);
+            }
+
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                IsMenuEnabled = true;
+                (CorrelatedX, CorrelatedY) = Correlation.Find(ResultingY1, ResultingY2);
+            });
+        }
         public event PropertyChangedEventHandler? PropertyChanged;
         protected void OnPropertyChanged(string propertyName)
         {
