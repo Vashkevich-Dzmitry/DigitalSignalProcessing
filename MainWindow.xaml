@@ -7,6 +7,7 @@
         xmlns:local="clr-namespace:DSP"
         xmlns:signals="clr-namespace:DSP.Signals"
         xmlns:helpers="clr-namespace:DSP.Helpers"
+        xmlns:correlation="clr-namespace:DSP.Correlations"
         mc:Ignorable="d"
         Title="Digital Signal Processing" Height="1080" Width="1920" WindowState="Maximized" FontSize="20" Icon="/dsp_icon.png">
     <Window.Resources>
@@ -228,6 +229,22 @@
                             </DockPanel>
                             
                         </StackPanel>
+                    </Expander>
+
+                <!-- Signal 2 -->
+
+                    <Expander BorderThickness="1" BorderBrush="Gray" Background="WhiteSmoke" Header="Correlation" Margin="5" Padding="5" IsExpanded="{Binding Correlation.IsCorrelationPanelVisible}">
+
+                        <DockPanel>
+                            <ComboBox Name="CorrelationTypeComboBox" Margin="0, 10, 0, 10" DockPanel.Dock="Top"
+                                  ItemsSource="{helpers:EnumBindingSourceExtension correlation:CorrelationType}" SelectedItem="{Binding Correlation.SelectedAlgorithm.Type}">
+                                <i:Interaction.Triggers>
+                                    <i:EventTrigger EventName="SelectionChanged">
+                                        <i:InvokeCommandAction Command="{Binding Correlation.ChangeCorrelationTypeCommand}" CommandParameter="{Binding ElementName=CorrelationTypeComboBox, Path=SelectedItem}"/>
+                                    </i:EventTrigger>
+                                </i:Interaction.Triggers>
+                            </ComboBox>
+                        </DockPanel>
                     </Expander>
 
                 </StackPanel>

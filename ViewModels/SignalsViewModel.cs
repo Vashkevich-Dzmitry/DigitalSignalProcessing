@@ -364,6 +364,7 @@ namespace DSP.ViewModels
 
         public NoisesViewModel Noises1 { get; set; }
         public NoisesViewModel Noises2 { get; set; }
+        public CorrelationViewModel Correlation { get; set; }
 
         public ObservableCollection<GeneratedSignal> Signals1 { get; set; }
         public ObservableCollection<GeneratedSignal> Signals2 { get; set; }
@@ -375,6 +376,8 @@ namespace DSP.ViewModels
             n = 256;
             minX = 0;
             maxX = 256;
+
+            Correlation = new();
 
             Noises1 = new();
             Noises1.PropertyChanged += (sender, args) =>
