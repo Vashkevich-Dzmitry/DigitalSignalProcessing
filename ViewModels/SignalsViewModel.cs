@@ -22,14 +22,14 @@ namespace DSP.ViewModels
                 if (n != value)
                 {
                     n = value;
-                    maxX = value;
-                    minX = 0;
 
                     (ResultingX1, ResultingY1) = ComputeResultingSignal(Signals1, Noises1, N);
 
                     OnPropertyChanged(nameof(N));
-                    OnPropertyChanged(nameof(MaxX));
-                    OnPropertyChanged(nameof(MinX));
+                    
+                    MinX = 0;
+                    MaxX = value;
+                    
                 }
             }
         }
