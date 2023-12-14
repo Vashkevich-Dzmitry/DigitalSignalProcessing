@@ -525,13 +525,14 @@ namespace DSP.ViewModels
                 {
                     SignalsPlot.Plot.Clear();
                     SignalsPlot.Plot.AddBar(y1, x1, System.Drawing.Color.LightGreen);
-                    SignalsPlot.Plot.AddBar(y2, signal2X.ToArray(), System.Drawing.Color.Blue);
+                    var bar2 = SignalsPlot.Plot.AddBar(y2, signal2X.ToArray(), System.Drawing.Color.Blue);
+                    bar2.BarWidth = 0.5;
                     SignalsPlot.Plot.SetAxisLimits(xMin: 1 - n2, xMax: nc);
                     SignalsPlot.Refresh();
 
                     CorrelationPlot.Plot.Clear();
                     CorrelationPlot.Plot.AddScatter(computedCorrelationX.ToArray(), computedCorrelationY.ToArray(), System.Drawing.Color.IndianRed, 3);
-                    CorrelationPlot.Plot.SetAxisLimits(xMin: 0, xMax: nc, yMin: -1, yMax: 1);
+                    CorrelationPlot.Plot.SetAxisLimits(xMin: 0, xMax: nc);
                     CorrelationPlot.Refresh();
                 });
 
