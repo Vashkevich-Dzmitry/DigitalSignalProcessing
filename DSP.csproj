@@ -16,4 +16,8 @@
     <Resource Include="dsp_icon.png" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Correlations\" />
+  </ItemGroup>
+
 </Project>

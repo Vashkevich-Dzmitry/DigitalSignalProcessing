@@ -14,7 +14,7 @@ namespace DSP.Signals
             PointF[] points = new PointF[N];
             for (int n = 0; n < N; n++)
             {
-                points[n].X = n / (float)N;
+                points[n].X = n;
                 points[n].Y = (float)Math.Round((2 * A / Math.PI) * Math.Abs(Math.Abs((((2 * Math.PI * f * n) / N + phi0 - (Math.PI / 2)) % (2 * Math.PI))) - Math.PI) - A, 3);
             }
 
